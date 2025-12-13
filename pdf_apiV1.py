@@ -6,6 +6,11 @@ import base64
 
 app = FastAPI()
 
+# ✅ Health check (VERY IMPORTANT for Render)
+@app.get("/")
+def health():
+    return {"status": "ok"}
+
 def split_pdf_to_pages_bytes(pdf_bytes: bytes, original_name: str):
     reader = PdfReader(io.BytesIO(pdf_bytes))
 
@@ -28,11 +33,9 @@ def split_pdf_to_pages_bytes(pdf_bytes: bytes, original_name: str):
         writer.write(buffer)
         buffer.seek(0)
 
-        file_b64 = base64.b64encode(buffer.read()).decode("utf-8")
-
         output_files.append({
             "filename": filename,
-            "content": file_b64
+            "content": base64.b64encode(buffer.read()).decode("utf-8")
         })
 
     return output_files
@@ -42,6 +45,12 @@ def split_pdf_to_pages_bytes(pdf_bytes: bytes, original_name: str):
 async def split_pdf(file: UploadFile = File(...)):
     pdf_bytes = await file.read()
 
-    pages = split_pdf_to_pages_bytes(pdf_bytes, file.filename)
+    # ✅ HARD LIMIT (Render free tier protection)
+    if len(pdf_bytes) > 5 * 1024 * 1024:  # 5 MB
+        return {
+            "status": "error",
+            "message": "File too large for Render free tier"
+        }
 
+    pages = split_pdf_to_pages_bytes(pdf_bytes, file.filename)
     return {"pages": pages}
