@@ -1,0 +1,4 @@
+fastAPI
+pypdf2
+uvicorn
+python-multipart
