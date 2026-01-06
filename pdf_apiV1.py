@@ -1,3 +1,5 @@
+# PDF Splitter API using FastAPI and PyPDF2
+
 from fastapi import FastAPI, UploadFile, HTTPException, File
 from PyPDF2 import PdfReader, PdfWriter
 import os
