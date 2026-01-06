@@ -1,5 +1,6 @@
 fastAPI
 pypdf2
+pypdf
 uvicorn
 python-multipart
 pycryptodome
