@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, HTTPException, File
 from PyPDF2 import PdfReader, PdfWriter
 import os
 import io
