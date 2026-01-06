@@ -14,6 +14,13 @@ def health():
 def split_pdf_to_pages_bytes(pdf_bytes: bytes, original_name: str):
     reader = PdfReader(io.BytesIO(pdf_bytes))
 
+    # 🔐 HANDLE ENCRYPTED PDFs
+    if reader.is_encrypted:
+        try:
+            reader.decrypt("")  # empty password (works for most PDFs)
+        except Exception:
+            raise ValueError("Encrypted PDF cannot be processed")
+
     base_name = os.path.splitext(original_name)[0]
     total_pages = len(reader.pages)
 
@@ -40,17 +47,19 @@ def split_pdf_to_pages_bytes(pdf_bytes: bytes, original_name: str):
 
     return output_files
 
-
 @app.post("/split-pdf")
 async def split_pdf(file: UploadFile = File(...)):
     pdf_bytes = await file.read()
 
-    # ✅ HARD LIMIT (Render free tier protection)
-    if len(pdf_bytes) > 5 * 1024 * 1024:  # 5 MB
-        return {
-            "status": "error",
-            "message": "File too large for Render free tier"
-        }
+    if len(pdf_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail="File too large for Render free tier"
+        )
 
-    pages = split_pdf_to_pages_bytes(pdf_bytes, file.filename)
-    return {"pages": pages}
+    try:
+        pages = split_pdf_to_pages_bytes(pdf_bytes, file.filename)
+        return {"pages": pages}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
