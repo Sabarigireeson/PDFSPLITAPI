@@ -26,8 +26,7 @@ def split_pdf_to_pages_bytes(pdf_bytes: bytes, original_name: str):
     base_name = os.path.splitext(original_name)[0]
     total_pages = len(reader.pages)
 
-    pad = len(str(total_pages))
-    total_str = str(total_pages).zfill(pad)
+    pad = max(4, len(str(total_pages)))
 
     output_files = []
 
@@ -36,7 +35,7 @@ def split_pdf_to_pages_bytes(pdf_bytes: bytes, original_name: str):
         writer.add_page(page)
 
         page_num = str(i).zfill(pad)
-        filename = f"{base_name}_{page_num}-{total_str}.pdf"
+        filename = f"{page_num}_{base_name}.pdf"  #filename
 
         buffer = io.BytesIO()
         writer.write(buffer)
